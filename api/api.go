@@ -23,6 +23,25 @@ func (a *Api) Run() error {
 		AllowAllOrigins:  true,
 		MaxAge:           12 * time.Hour,
 	}))
-	r.POST("/queryAllHospitals", a.queryAllHospitals)
+	r.GET("/queryAllHospitals", a.queryAllHospitals)
+	r.GET("/initHospital", a.initHospital)
 	return r.Run()
+}
+
+func RespErr(c *gin.Context, err error, msg ...string) {
+	results := map[string]interface{}{
+		"status": 1,
+		"err":    err.Error(),
+	}
+	if len(msg) >= 1 {
+		results["msg"] = msg[0]
+	}
+	c.JSON(200, results)
+}
+
+func Resp(c *gin.Context, results interface{}) {
+	c.JSON(200, map[string]interface{}{
+		"status": 0,
+		"data":   results,
+	})
 }

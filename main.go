@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/xuyuntech/health-service/blockchain"
 	"github.com/xuyuntech/health-service/api"
+	"github.com/xuyuntech/health-service/blockchain"
 )
 
 func main() {
@@ -42,6 +42,6 @@ func main() {
 		Fabric: &fSetup,
 	}
 	if err := aApi.Run(); err != nil {
-		logrus.Fatal(err)
+		panic(err)
 	}
 }

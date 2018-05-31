@@ -14,14 +14,14 @@ build:
 ##### ENV
 env-up:
 	@echo "Start environment ..."
-	@cd fixtures && docker-compose up --force-recreate -d
+	@cd fabric && docker-compose up --force-recreate -d
 	@echo "Sleep 15 seconds in order to let the environment setup correctly"
 	@sleep 15
 	@echo "Environment up"
 
 env-down:
 	@echo "Stop environment ..."
-	@cd fixtures && docker-compose down
+	@cd fabric && docker-compose down
 	@echo "Environment down"
 
 ##### RUN

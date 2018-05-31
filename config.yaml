@@ -30,7 +30,7 @@ client:
 
   # Root of the MSP directories with keys and certs. The Membership Service Providers is component that aims to offer an abstraction of a membership operation architecture.
   cryptoconfig:
-    path: "${GOPATH}/src/github.com/chainHero/heroes-service/fixtures/crypto-config"
+    path: "${GOPATH}/src/github.com/xuyuntech/health-service/fabric/crypto-config"
 
   # Some SDKs support pluggable KV stores, the properties under "credentialStore" are implementation specific
   credentialStore:
@@ -106,7 +106,7 @@ orderers:
       ssl-target-name-override: orderer.hf.chainhero.io
       grpc-max-send-message-length: 15
     tlsCACerts:
-      path: "${GOPATH}/src/github.com/chainHero/heroes-service/fixtures/crypto-config/ordererOrganizations/hf.chainhero.io/tlsca/tlsca.hf.chainhero.io-cert.pem"
+      path: "${GOPATH}/src/github.com/xuyuntech/health-service/fabric/crypto-config/ordererOrganizations/hf.chainhero.io/tlsca/tlsca.hf.chainhero.io-cert.pem"
 
 # List of peers to send various requests to, including endorsement, query and event listener registration.
 peers:
@@ -121,7 +121,7 @@ peers:
       grpc.http2.keepalive_time: 15
 
     tlsCACerts:
-      path: "${GOPATH}/src/github.com/chainHero/heroes-service/fixtures/crypto-config/peerOrganizations/org1.hf.chainhero.io/tlsca/tlsca.org1.hf.chainhero.io-cert.pem"
+      path: "${GOPATH}/src/github.com/xuyuntech/health-service/fabric/crypto-config/peerOrganizations/org1.hf.chainhero.io/tlsca/tlsca.org1.hf.chainhero.io-cert.pem"
 
   peer1.org1.hf.chainhero.io:
     url: grpcs://localhost:8051
@@ -131,7 +131,7 @@ peers:
       grpc.http2.keepalive_time: 15
     tlsCACerts:
       # Certificate location absolute path
-      path: "${GOPATH}/src/github.com/chainHero/heroes-service/fixtures/crypto-config/peerOrganizations/org1.hf.chainhero.io/tlsca/tlsca.org1.hf.chainhero.io-cert.pem"
+      path: "${GOPATH}/src/github.com/xuyuntech/health-service/fabric/crypto-config/peerOrganizations/org1.hf.chainhero.io/tlsca/tlsca.org1.hf.chainhero.io-cert.pem"
 
 # Fabric-CA is a special kind of Certificate Authority provided by Hyperledger Fabric which allows certificate management to be done via REST APIs.
 certificateAuthorities:
