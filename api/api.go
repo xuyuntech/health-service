@@ -26,7 +26,7 @@ func (a *Api) Run() error {
 	r.GET("/queryAllHospital", a.queryAllHospital)
 	r.GET("/initHospital", a.initHospital)
 	r.GET("/queryAllUser", a.queryAllUser)
-	r.GET("/initUser", a.initHospital)
+	r.GET("/initUser", a.initUser)
 	return r.Run()
 }
 

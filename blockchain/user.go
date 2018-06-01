@@ -56,8 +56,9 @@ func (setup *FabricSetup) QueryUser(queryString string) (string, error) {
 	var args []string
 	args = append(args, "query")
 	args = append(args, queryString)
+	fmt.Println("queryString:", queryString)
 
-	response, err := setup.client.Query(chclient.Request{ChaincodeID: setup.ChainCodeID, Fcn: args[0], Args: [][]byte{}})
+	response, err := setup.client.Query(chclient.Request{ChaincodeID: setup.ChainCodeID, Fcn: args[0], Args: [][]byte{[]byte(args[1])}})
 	if err != nil {
 		return "", fmt.Errorf("failed to query: %v", err)
 	}

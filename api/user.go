@@ -8,7 +8,7 @@ import (
 )
 
 func (a *Api) queryAllUser(c *gin.Context) {
-	queryString := c.Param("query_string")
+	queryString := c.Query("query_string")
 	if strings.Trim(queryString, " ") == "" {
 		RespErr(c, errors.New("need query_string param"))
 		return
