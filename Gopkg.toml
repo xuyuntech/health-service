@@ -1,7 +1,7 @@
 [[constraint]]
   # v1.0.5
   name = "github.com/hyperledger/fabric"
-  revision = "014d6befcf67f3787bb3d67ff34e1a98dc6aec5f"
+  version = "1.0.5"
 
 [[constraint]]
   name = "github.com/hyperledger/fabric-sdk-go"

@@ -84,7 +84,7 @@
     "pkg/term",
     "pkg/term/windows"
   ]
-  revision = "2ea4ece674e04c04174ee9fff8005cdccdc4fad0"
+  revision = "71cd53e4a197b303c6ba086bd584ffd67a884281"
 
 [[projects]]
   name = "github.com/docker/go-connections"
@@ -115,6 +115,28 @@
   packages = ["."]
   revision = "ca33ff277b527ce11b793e62f9ba244129b01caf"
   version = "v1.2.0"
+
+[[projects]]
+  name = "github.com/gin-contrib/cors"
+  packages = ["."]
+  revision = "cf4846e6a636a76237a28d9286f163c132e841bc"
+  version = "v1.2"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/gin-contrib/sse"
+  packages = ["."]
+  revision = "22d885f9ecc78bf4ee5d72b937e4bbcdc58e8cae"
+
+[[projects]]
+  name = "github.com/gin-gonic/gin"
+  packages = [
+    ".",
+    "binding",
+    "render"
+  ]
+  revision = "d459835d2b077e44f7c9b453505ee29881d5d12d"
+  version = "v1.2"
 
 [[projects]]
   name = "github.com/gogo/protobuf"
@@ -195,6 +217,7 @@
     "protos/utils"
   ]
   revision = "014d6befcf67f3787bb3d67ff34e1a98dc6aec5f"
+  version = "v1.0.5"
 
 [[projects]]
   name = "github.com/hyperledger/fabric-sdk-go"
@@ -300,6 +323,12 @@
   version = "v1.8.0"
 
 [[projects]]
+  name = "github.com/mattn/go-isatty"
+  packages = ["."]
+  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
+  version = "v0.0.3"
+
+[[projects]]
   branch = "master"
   name = "github.com/miekg/pkcs11"
   packages = ["."]
@@ -393,6 +422,12 @@
   revision = "15738813a09db5c8e5b60a19d67d3f9bd38da3a4"
 
 [[projects]]
+  name = "github.com/ugorji/go"
+  packages = ["codec"]
+  revision = "b4c50a2b199d93b13dc15e78929cfb23bfdf21ab"
+  version = "v1.1.1"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/crypto"
   packages = [
@@ -404,7 +439,7 @@
     "sha3",
     "ssh/terminal"
   ]
-  revision = "ab813273cd59e1333f7ae7bff5d027d4aadf528c"
+  revision = "5ba7f63082460102a45837dbd1827e10f9479ac0"
 
 [[projects]]
   branch = "master"
@@ -455,7 +490,7 @@
   branch = "master"
   name = "google.golang.org/genproto"
   packages = ["googleapis/rpc/status"]
-  revision = "694d95ba50e67b2e363f3483057db5d4910c18f9"
+  revision = "4065a77fc542a455295382a23a996a08ed18813a"
 
 [[projects]]
   name = "google.golang.org/grpc"
@@ -489,6 +524,12 @@
   version = "v1.12.0"
 
 [[projects]]
+  name = "gopkg.in/go-playground/validator.v8"
+  packages = ["."]
+  revision = "5f1438d3fca68893a817e4a66806cea46a9e4ebf"
+  version = "v8.18.2"
+
+[[projects]]
   name = "gopkg.in/yaml.v2"
   packages = ["."]
   revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
@@ -497,6 +538,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2d56359a325aa6861cc958f81c2183df033b66614556e81d459ed26d1c47ef91"
+  inputs-digest = "44e3a4d63f267d8257b59d2f3f75334371e647e5ba55290ac89d2e8d00e1d12c"
   solver-name = "gps-cdcl"
   solver-version = 1

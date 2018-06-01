@@ -14,7 +14,7 @@ PeerOrgs:
     # You may override the number of nodes (Count), the starting index (Start)
     # or the template used to construct the name (Hostname).
     Template:
-      Count: 2
+      Count: 1
     Users:
       # The number of user accounts _in addition_ to Admin
-      Count: 2
+      Count: 1

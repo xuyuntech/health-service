@@ -84,7 +84,7 @@ channels:
         # Default: true
         eventSource: true
 
-      peer1.org1.hf.chainhero.io:
+      # peer1.org1.hf.chainhero.io:
 
 # List of participating organizations in this network
 organizations:
@@ -123,15 +123,15 @@ peers:
     tlsCACerts:
       path: "${GOPATH}/src/github.com/xuyuntech/health-service/fabric/crypto-config/peerOrganizations/org1.hf.chainhero.io/tlsca/tlsca.org1.hf.chainhero.io-cert.pem"
 
-  peer1.org1.hf.chainhero.io:
-    url: grpcs://localhost:8051
-    eventUrl: grpcs://localhost:8053
-    grpcOptions:
-      ssl-target-name-override: peer1.org1.hf.chainhero.io
-      grpc.http2.keepalive_time: 15
-    tlsCACerts:
-      # Certificate location absolute path
-      path: "${GOPATH}/src/github.com/xuyuntech/health-service/fabric/crypto-config/peerOrganizations/org1.hf.chainhero.io/tlsca/tlsca.org1.hf.chainhero.io-cert.pem"
+  # peer1.org1.hf.chainhero.io:
+  #   url: grpcs://localhost:8051
+  #   eventUrl: grpcs://localhost:8053
+  #   grpcOptions:
+  #     ssl-target-name-override: peer1.org1.hf.chainhero.io
+  #     grpc.http2.keepalive_time: 15
+  #   tlsCACerts:
+  #     # Certificate location absolute path
+  #     path: "${GOPATH}/src/github.com/xuyuntech/health-service/fabric/crypto-config/peerOrganizations/org1.hf.chainhero.io/tlsca/tlsca.org1.hf.chainhero.io-cert.pem"
 
 # Fabric-CA is a special kind of Certificate Authority provided by Hyperledger Fabric which allows certificate management to be done via REST APIs.
 certificateAuthorities:

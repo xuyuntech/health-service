@@ -23,8 +23,10 @@ func (a *Api) Run() error {
 		AllowAllOrigins:  true,
 		MaxAge:           12 * time.Hour,
 	}))
-	r.GET("/queryAllHospitals", a.queryAllHospitals)
+	r.GET("/queryAllHospital", a.queryAllHospital)
 	r.GET("/initHospital", a.initHospital)
+	r.GET("/queryAllUser", a.queryAllUser)
+	r.GET("/initUser", a.initHospital)
 	return r.Run()
 }
 

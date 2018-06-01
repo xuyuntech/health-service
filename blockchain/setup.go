@@ -71,7 +71,10 @@ func (setup *FabricSetup) Initialize() error {
 	// Creation of the channel chainhero. A channel can be understood as a private network inside the main network between two or more specific network Organizations
 	// The channel is defined by its : Organizations, anchor peer (A peer node that all other peers can discover and communicate with. Every Organizations have one), the shared ledger, chaincode application(s) and the ordering service node(s)
 	// Each transaction on the network is executed on a channel.
-	req := chmgmt.SaveChannelRequest{ChannelID: setup.ChannelID, ChannelConfig: setup.ChannelConfig, SigningIdentity: orgAdminUser}
+	req := chmgmt.SaveChannelRequest{
+		ChannelID:       setup.ChannelID,
+		ChannelConfig:   setup.ChannelConfig,
+		SigningIdentity: orgAdminUser}
 	if err = chMgmtClient.SaveChannel(req); err != nil {
 		return fmt.Errorf("failed to create channel: %v", err)
 	}
@@ -104,11 +107,15 @@ func (setup *FabricSetup) InstallAndInstantiateCC() error {
 		return fmt.Errorf("failed to create new channel client: %v", err)
 	}
 
+	ccVer := fmt.Sprintf("1.0.%d", time.Now().Unix())
 	// Install our chaincode on org peers
 	// The resource management client send the chaincode to all peers in its channel in order for them to store it and interact with it later
-	installCCReq := resmgmt.InstallCCRequest{Name: setup.ChainCodeID, Path: setup.ChaincodePath, Version: "1.0", Package: ccPkg}
-	_, err = setup.admin.InstallCC(installCCReq)
-	if err != nil {
+	installCCReq := resmgmt.InstallCCRequest{
+		Name:    setup.ChainCodeID,
+		Path:    setup.ChaincodePath,
+		Version: ccVer,
+		Package: ccPkg}
+	if _, err := setup.admin.InstallCC(installCCReq); err != nil {
 		return fmt.Errorf("failed to install cc to org peers %v", err)
 	}
 
@@ -120,7 +127,14 @@ func (setup *FabricSetup) InstallAndInstantiateCC() error {
 
 	// Instantiate our chaincode on org peers
 	// The resource management client tells to all peers in its channel to instantiate the chaincode previously installed
-	err = setup.admin.InstantiateCC(setup.ChannelID, resmgmt.InstantiateCCRequest{Name: setup.ChainCodeID, Path: setup.ChaincodePath, Version: "1.0", Args: [][]byte{[]byte("init")}, Policy: ccPolicy})
+	err = setup.admin.InstantiateCC(
+		setup.ChannelID,
+		resmgmt.InstantiateCCRequest{
+			Name:    setup.ChainCodeID,
+			Path:    setup.ChaincodePath,
+			Version: ccVer,
+			Args:    [][]byte{[]byte("init")},
+			Policy:  ccPolicy})
 	if err != nil {
 		return fmt.Errorf("failed to instantiate the chaincode: %v", err)
 	}

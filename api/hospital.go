@@ -4,7 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (a *Api) queryAllHospitals(c *gin.Context) {
+func (a *Api) queryAllHospital(c *gin.Context) {
 	payload, err := a.Fabric.QueryAllHospital()
 	if err != nil {
 		RespErr(c, err)
