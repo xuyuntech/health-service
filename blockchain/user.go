@@ -7,12 +7,12 @@ import (
 	"github.com/hyperledger/fabric-sdk-go/api/apitxn/chclient"
 )
 
-func (setup *FabricSetup) InitUser() (string, error) {
+func (setup *FabricSetup) InitData() (string, error) {
 	// Prepare arguments
 	var args []string
-	args = append(args, "initUser")
+	args = append(args, "initData")
 
-	eventID := "initUser"
+	eventID := "initData"
 
 	// Add data that will be visible in the proposal, like a description of the invoke request
 	transientDataMap := make(map[string][]byte)
@@ -50,7 +50,7 @@ func (setup *FabricSetup) InitUser() (string, error) {
 }
 
 // QueryUser query the chaincode to get the state of hello
-func (setup *FabricSetup) QueryUser(queryString string) (string, error) {
+func (setup *FabricSetup) Query(queryString string) (string, error) {
 
 	// Prepare arguments
 	var args []string

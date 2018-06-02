@@ -1,7 +1,11 @@
 package api
 
 import (
+	"errors"
+	"strings"
 	"time"
+
+	"fmt"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -23,11 +27,77 @@ func (a *Api) Run() error {
 		AllowAllOrigins:  true,
 		MaxAge:           12 * time.Hour,
 	}))
-	r.GET("/queryAllHospital", a.queryAllHospital)
-	r.GET("/initHospital", a.initHospital)
-	r.GET("/queryAllUser", a.queryAllUser)
-	r.GET("/initUser", a.initUser)
+	r.GET("/arrangement", a.arrangement)
+	r.GET("/initData", a.initData)
+	r.GET("/query", a.query)
+	r.GET("/createRegister", a.createRegister)
+	r.POST("/updateRegister", a.updateRegister)
 	return r.Run()
+}
+
+func (a *Api) arrangement(c *gin.Context) {
+	form := &blockchain.ArrangementForm{}
+	if err := c.BindJSON(form); err != nil {
+		RespErr(c, fmt.Errorf("参数错误(%v)", err))
+		return
+	}
+	payload, err := a.Fabric.Arrangement(form)
+	if err != nil {
+		RespErr(c, err)
+		return
+	}
+	Resp(c, payload)
+}
+func (a *Api) initData(c *gin.Context) {
+	payload, err := a.Fabric.InitData()
+	if err != nil {
+		RespErr(c, err)
+		return
+	}
+	Resp(c, payload)
+}
+
+func (a *Api) query(c *gin.Context) {
+	queryString := c.Query("query_string")
+	if strings.Trim(queryString, " ") == "" {
+		RespErr(c, errors.New("need query_string param"))
+		return
+	}
+	payload, err := a.Fabric.Query(queryString)
+	if err != nil {
+		RespErr(c, err)
+		return
+	}
+	Resp(c, payload)
+}
+func (a *Api) createRegister(c *gin.Context) {
+	// query: userKey, arrangementKey
+	userKey := c.Query("userKey")
+	arrangementKey := c.Query("arrangementKey")
+
+	payload, err := a.Fabric.CreateRegister(userKey, arrangementKey)
+	if err != nil {
+		RespErr(c, err)
+		return
+	}
+	Resp(c, payload)
+}
+func (a *Api) updateRegister(c *gin.Context) {
+	// 参数说明
+	// 0 		1					2		[3			4			5			6				7]
+	// userKey	registerHistoryKey 	state 	complained 	diagnose 	history 	familyHistory 	items [][]string
+	// 用户		挂号记录				状态		主诉			诊断			病史			家族史			药品列表
+	updateRegisterForm := &blockchain.UpdateRegisterForm{}
+	if err := c.BindJSON(updateRegisterForm); err != nil {
+		RespErr(c, fmt.Errorf("参数错误(%v)", err))
+		return
+	}
+	payload, err := a.Fabric.UpdateRegister(updateRegisterForm)
+	if err != nil {
+		RespErr(c, err)
+		return
+	}
+	Resp(c, payload)
 }
 
 func RespErr(c *gin.Context, err error, msg ...string) {

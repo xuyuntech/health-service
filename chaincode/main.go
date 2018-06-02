@@ -7,146 +7,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/satori/go.uuid"
-
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
+	"github.com/satori/go.uuid"
 )
 
 type SmartContract struct {
 }
 
-type Entity interface {
-	GetKey() string
-	GetObjectType() string
-}
-
-type Hospital struct {
-	ObjectType string `json:"docType"`
-	Name       string `json:"name"`
-	Address    string `json:"address"`
-	Phone1     string `json:"phone1"`
-	Phone2     string `json:"phone2"`
-	CountryID  string `json:"country_id"`
-}
-
-func (h *Hospital) GetKey() string {
-	return fmt.Sprintf("%s-%s", h.ObjectType, h.Name)
-}
-func (h *Hospital) GetObjectType() string {
-	return h.ObjectType
-}
-
-type MedicalItem struct {
-	ObjectType       string `json:"docType"`
-	Title            string `json:"title"`
-	Quantity         string `json:"quantity"`
-	Price            string `json:"price"`
-	SupplierID       string `json:"supplierID"`       // 生产厂家
-	BarCode          string `json:"barCode"`          // 条码
-	BatchNumber      string `json:"batchNumber"`      //批号
-	PermissionNumber string `json:"permissionNumber"` // 批准文号
-	ProductionDate   string `json:"productionDate"`
-	ExpiredDate      string `json:"expiredDate"`
-}
-
-func (h MedicalItem) GetKey() string {
-	return fmt.Sprintf("%s-%s-%s-%s", h.ObjectType, h.PermissionNumber, h.BatchNumber, h.BarCode)
-}
-func (h MedicalItem) GetObjectType() string {
-	return h.ObjectType
-}
-
-// RegisterHospitalHistory 挂号记录
-type RegisterHospitalHistory struct {
-	ObjectType     string `json:"docType"`
-	UserKey        string `json:"userKey"`
-	ArrangementKey string `json:"arrangementKey"`
-	IsCheck        string `json:"isCheck"` // 核销
-	Created        string `json:"craeted"` // unix time
-}
-
-func (h RegisterHospitalHistory) GetKey() string {
-	return fmt.Sprintf("%s-%s", h.ObjectType, uuid.NewV4().String())
-}
-func (h RegisterHospitalHistory) GetObjectType() string {
-	return h.ObjectType
-}
-
-// ArrangementHistory 排班
-type ArrangementHistory struct {
-	ObjectType    string `json:"docType"`
-	HospitalKey   string `json:"hospitalKey"`
-	DoctorKey     string `json:"doctorKey"`
-	VisitDateTime string `json:"visitDate"` // 出诊日期时间 unix timestamp
-}
-
-func (h ArrangementHistory) GetKey() string {
-	return fmt.Sprintf("%s-%s", h.ObjectType, uuid.NewV4().String())
-}
-func (h ArrangementHistory) GetObjectType() string {
-	return h.ObjectType
-}
-
-type Supplier struct {
-	ObjectType string `json:"docType"`
-	Name       string `json:"name"`
-	Address    string `json:"address"`
-	ZipCode    string `json:"zipCode"`
-	Telephone  string `json:"Telephone"`
-	Fax        string `json:"fax"`
-	WebSite    string `json:"webSite"`
-}
-
-func (h Supplier) GetKey() string {
-	return fmt.Sprintf("%s-%s", h.ObjectType, h.Name)
-}
-func (h Supplier) GetObjectType() string {
-	return h.ObjectType
-}
-
-type Doctor struct {
-	ObjectType  string `json:"docType"`
-	Sid         string `json:"sid"`
-	Name        string `json:"name"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Avatar      string `json:"avatar"`
-	Phone       string `json:"phone"`
-	Email       string `json:"email"`
-	Gender      string `json:"gender"`
-	Age         string `json:"age"`
-}
-
-func (h *Doctor) GetKey() string {
-	return fmt.Sprintf("%s-%s", h.ObjectType, h.Sid)
-}
-func (h *Doctor) GetObjectType() string {
-	return h.ObjectType
-}
-
-type User struct {
-	ObjectType string `json:"docType"`
-	Sid        string `json:"sid"`
-	Name       string `json:"name"`
-	Birthday   string `json:"birthday"`
-	Gender     string `json:"gender"`
-	Age        string `json:"age"`
-	TotalSpend string `json:"totalSpend"`
-	Address    string `json:"address"`
-	Phone      string `json:"phone"`
-	Email      string `json:"email"`
-}
-
-func (h User) GetKey() string {
-	return fmt.Sprintf("%s-%s", h.ObjectType, h.Sid)
-}
-func (h User) GetObjectType() string {
-	return h.ObjectType
-}
-
 func (s *SmartContract) Init(APIstub shim.ChaincodeStubInterface) sc.Response {
-	fmt.Println("Store Init ->>")
 	return shim.Success(nil)
 }
 
@@ -158,11 +27,33 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 		return s.initData(APIstub, args)
 	} else if function == "query" {
 		return s.query(APIstub, args)
+	} else if function == "createRegister" {
+		return s.createRegister(APIstub, args)
+	} else if function == "updateRegister" {
+		return s.updateRegister(APIstub, args)
+	} else if function == "arrangement" {
+		return s.arrangement(APIstub, args)
 	}
 
 	return shim.Error("Invalid Smart Contract function name.")
 }
 
+func (s *SmartContract) arrangement(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	hospitalKey := args[0]
+	doctorKey := args[1]
+	visitUnix := args[2]
+	objectType := "ArrangementHistory"
+	entity := &ArrangementHistory{
+		objectType,
+		hospitalKey,
+		doctorKey,
+		visitUnix,
+	}
+	if err := putState(entity, stub, "arrangement"); err != nil {
+		return shim.Error(err.Error())
+	}
+	return shim.Success(nil)
+}
 func (s *SmartContract) initData(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 	doctorType := "Doctor"
 	userType := "User"
@@ -215,52 +106,141 @@ func (s *SmartContract) initData(stub shim.ChaincodeStubInterface, args []string
 	return shim.Success(nil)
 }
 
-// registerHospital 挂号
-func (s *SmartContract) registerHospital(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+// createRegister 挂号 -> 生成挂号记录
+func (s *SmartContract) createRegister(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 	userKey := args[0]
 	arrangementKey := args[1]
 
-	entity := &RegisterHospitalHistory{"RegisterHospitalHistory", userKey, arrangementKey, "false", fmt.Sprintf("%d", time.Now().Unix())}
+	entity := &RegisterHistory{
+		"RegisterHospitalHistory",
+		userKey,
+		arrangementKey,
+		"Register",
+		"",
+		fmt.Sprintf("%d", time.Now().Unix())}
 
-	if err := putState(entity, stub, "registerHospital"); err != nil {
+	if err := putState(entity, stub, "createRegister"); err != nil {
 		return shim.Error(err.Error())
 	}
 
 	return shim.Success(nil)
 }
 
-// unRegisterHospital 挂号核销
-func (s *SmartContract) unRegisterHospital(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+// updateRegister 更新挂号记录状态 -> 就诊、已开方待支付、已支付待取药、已取药
+func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+	// 参数说明
+	// 0 		1					2		[3			4			5			6				7]
+	// userKey	registerHistoryKey 	state 	complained 	diagnose 	history 	familyHistory 	itemsStr
+	// 用户		挂号记录				状态		主诉			诊断			病史			家族史			药品列表
 	userKey := args[0]
-	registerHospitalHistoryKey := args[1]
-
-	if registerHospitalHistoryBytes, err := stub.GetState(registerHospitalHistoryKey); err != nil {
-		return shim.Error(err.Error())
-	} else if registerHospitalHistoryBytes == nil {
-		return shim.Error(fmt.Sprintf("该条挂号记录没有找到(%s)", registerHospitalHistoryKey))
-	} else {
-		var registerHospitalHistory RegisterHospitalHistory
-		if err := json.Unmarshal(registerHospitalHistoryBytes, &registerHospitalHistory); err != nil {
-			return shim.Error(fmt.Sprintf("解析挂号记录出错(%v)", err))
-		}
-		if registerHospitalHistory.UserKey != userKey {
-			return shim.Error(fmt.Sprintf("该条挂号记录不属于此用户"))
-		}
-		registerHospitalHistory.IsCheck = "true"
-		if b, err := json.Marshal(&registerHospitalHistory); err != nil {
-			return shim.Error(fmt.Sprintf("回写记录失败(%v)", err))
-		} else if err := stub.PutState(registerHospitalHistory.GetKey(), b); err != nil {
-			return shim.Error(err.Error())
-		}
+	registerHistoryKey := args[1]
+	state := args[2]
+	if len(args) < 3 {
+		return shim.Error("参数至少需要 3 个")
 	}
+	var (
+		registerHistoryBytes []byte
+		err                  error
+	)
+
+	if registerHistoryBytes, err = stub.GetState(registerHistoryKey); err != nil {
+		return shim.Error(err.Error())
+	} else if registerHistoryBytes == nil {
+		return shim.Error(fmt.Sprintf("该条挂号记录没有找到(%s)", registerHistoryKey))
+	}
+	var registerHistory RegisterHistory
+	if err := json.Unmarshal(registerHistoryBytes, &registerHistory); err != nil {
+		return shim.Error(fmt.Sprintf("解析挂号记录出错(%v)", err))
+	}
+	if registerHistory.UserKey != userKey {
+		return shim.Error(fmt.Sprintf("该条挂号记录不属于此用户"))
+	}
+
+	caseObjectType := "Case"
+	prescriptionObjectType := "Prescription"
+
+	switch state {
+	case "Visiting":
+		{
+			/* ========  就诊 ========= */
+			registerHistory.State = "Visiting"
+			registerHistory.VisitUnix = fmt.Sprintf("%d", time.Now().Unix())
+		}
+	case "PendingPayment":
+		{
+			/* ========  已开处方待支付 ========= */
+			if len(args) != 8 {
+				return shim.Error("需要 8 个参数")
+			}
+			complained := args[3]
+			diagnose := args[4]
+			history := args[5]
+			familyHistory := args[6]
+			itemsStr := args[7]
+			// todo 参数检查
+			// 解析药品列表
+			var items [][]string
+			if err := json.Unmarshal([]byte(itemsStr), &items); err != nil {
+				return shim.Error("药品列表解析失败")
+			}
+			// 病例和处方应该是一对一关系
+			// 生成新的病例记录
+			userCase := &Case{
+				caseObjectType,
+				uuid.NewV4().String(),
+				"",
+				complained,
+				diagnose,
+				history,
+				familyHistory,
+			}
+			// 生成处方, 相当于下订单
+			prescription := &Prescription{
+				prescriptionObjectType,
+				registerHistoryKey,
+				uuid.NewV4().String(),
+				userCase.GetKey(),
+				itemsStr,
+			}
+			userCase.PrescriptionKey = prescription.GetKey()
+			userCaseBytes, _ := json.Marshal(userCase)
+			prescriptionBytes, _ := json.Marshal(prescription)
+			if err := stub.PutState(userCase.GetKey(), userCaseBytes); err != nil {
+				return shim.Error(fmt.Sprintf("保存病例失败: %v", err))
+			}
+			if err := stub.PutState(prescription.GetKey(), prescriptionBytes); err != nil {
+				if err := stub.DelState(userCase.GetKey()); err != nil {
+					fmt.Sprintf("保存处方失败时，删除病例(%s)失败", userCase.GetKey())
+				}
+				return shim.Error(fmt.Sprintf("保存处方失败: %v", err))
+			}
+			// 更改挂号记录状态，已开处方待支付
+			registerHistory.State = "PendingPayment"
+		}
+	case "Paid":
+		/* ========  已支付待取药 ========= */
+		registerHistory.State = "Paid"
+		// 生成支付记录
+	case "Finished":
+		/* ========  已取药 ========= */
+		registerHistory.State = "Finished"
+		// 生成出库记录
+	default:
+		return shim.Error(fmt.Sprintf("不可用的挂号记录状态(%s)", state))
+	}
+	if b, err := json.Marshal(&registerHistory); err != nil {
+		return shim.Error(fmt.Sprintf("序列化回写记录失败(%v)", err))
+	} else if err := stub.PutState(registerHistory.GetKey(), b); err != nil {
+		return shim.Error(fmt.Sprintf("回写挂号记录失败(%v)", err))
+	}
+
+	// Notify listeners that an event "updateRegister" have been executed (check line 19 in the file invoke.go)
+	if err := stub.SetEvent("updateRegister", []byte{}); err != nil {
+		return shim.Error(err.Error())
+	}
+
 	return shim.Success(nil)
 }
-
-// orderPrescription 开处方 -> 生成处方以及订单
-
-// payPrescription 缴费 -> 生成支付记录
-
-// takePrescription 取药 -> 生成出库记录
 
 func (s *SmartContract) query(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
