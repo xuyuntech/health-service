@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"strconv"
+
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 	sc "github.com/hyperledger/fabric/protos/peer"
 	"github.com/satori/go.uuid"
@@ -38,6 +40,16 @@ func (s *SmartContract) Invoke(APIstub shim.ChaincodeStubInterface) sc.Response 
 	return shim.Error("Invalid Smart Contract function name.")
 }
 
+/**
+ * @api {post} /arrangement 排班
+ * @apiName arrangement
+ * @apiGroup HealthService
+ *
+ * @apiParam {String} hospitalKey 医院 key
+ * @apiParam {String} doctorKey 医生 key
+ * @apiParam {String} visitUnix 出诊时间(time.Now().Unix())
+ * @apiUse ArrangementHistory
+ */
 func (s *SmartContract) arrangement(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 	hospitalKey := args[0]
 	doctorKey := args[1]
@@ -54,6 +66,18 @@ func (s *SmartContract) arrangement(stub shim.ChaincodeStubInterface, args []str
 	}
 	return shim.Success(nil)
 }
+
+/**
+ * @api {get} /init 初始化数据
+ * @apiDescription 生成 医院、医生、用户、药品、供应商 等基础数据
+ * @apiName initData
+ * @apiGroup HealthService
+ * @apiUse Hospital
+ * @apiUse Doctor
+ * @apiUse User
+ * @apiUse MedicalItem
+ * @apiUse Supplier
+ */
 func (s *SmartContract) initData(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 	doctorType := "Doctor"
 	userType := "User"
@@ -106,15 +130,23 @@ func (s *SmartContract) initData(stub shim.ChaincodeStubInterface, args []string
 	return shim.Success(nil)
 }
 
+/**
+ * @api {get} /createRegister 生成挂号记录
+ * @apiName createRegister
+ * @apiGroup HealthService
+ * @apiUse RegisterHistory
+ */
 // createRegister 挂号 -> 生成挂号记录
 func (s *SmartContract) createRegister(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 	userKey := args[0]
 	arrangementKey := args[1]
 
 	entity := &RegisterHistory{
-		"RegisterHospitalHistory",
+		"RegisterHistory",
 		userKey,
 		arrangementKey,
+		"",
+		"",
 		"Register",
 		"",
 		fmt.Sprintf("%d", time.Now().Unix())}
@@ -160,15 +192,35 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 	prescriptionObjectType := "Prescription"
 
 	switch state {
+	/**
+	 * @api {get} /updateRegister/visiting 就诊
+	 * @apiDescription 用户来医院就诊，挂号状态由 Register -> Visiting
+	 * @apiName /updateRegister/visiting
+	 * @apiGroup HealthService
+	 */
 	case "Visiting":
 		{
 			/* ========  就诊 ========= */
 			registerHistory.State = "Visiting"
 			registerHistory.VisitUnix = fmt.Sprintf("%d", time.Now().Unix())
+			break
 		}
+	/**
+		 * @api {get} /updateRegister/prescription 开处方
+		 * @apiDescription 医生开处方，同时生成 处方、订单、病例 数据
+		 * @apiName /updateRegister/prescription
+		 * @apiGroup HealthService
+		 * @apiUse Prescription
+		 * @apiUse Order
+	 	 * @apiUse Case
+	*/
 	case "PendingPayment":
 		{
 			/* ========  已开处方待支付 ========= */
+			// 验证挂号单状态是否为 Visiting
+			if registerHistory.State != "Visiting" {
+				return shim.Error("挂号单还未核销")
+			}
 			if len(args) != 8 {
 				return shim.Error("需要 8 个参数")
 			}
@@ -178,11 +230,16 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 			familyHistory := args[6]
 			itemsStr := args[7]
 			// todo 参数检查
-			// 解析药品列表
-			var items [][]string
-			if err := json.Unmarshal([]byte(itemsStr), &items); err != nil {
-				return shim.Error("药品列表解析失败")
+
+			// todo 验证药品列表
+			var items []struct {
+				MedicalItemKey string `json:"medicalItemKey"`
+				Count          string `json:"count"`
 			}
+			if err := json.Unmarshal([]byte(itemsStr), &items); err != nil {
+				return shim.Error(fmt.Sprintf("药品列表解析失败(%v)", err))
+			}
+
 			// 病例和处方应该是一对一关系
 			// 生成新的病例记录
 			userCase := &Case{
@@ -194,43 +251,171 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 				history,
 				familyHistory,
 			}
-			// 生成处方, 相当于下订单
+			// 生成处方
 			prescription := &Prescription{
 				prescriptionObjectType,
 				registerHistoryKey,
 				uuid.NewV4().String(),
-				userCase.GetKey(),
+				"",
 				itemsStr,
 			}
-			userCase.PrescriptionKey = prescription.GetKey()
+			userCaseKey := userCase.GetKey()
+			prescriptionKey := prescription.GetKey()
+
+			userCase.PrescriptionKey = prescriptionKey
+			prescription.CaseKey = userCaseKey
+
 			userCaseBytes, _ := json.Marshal(userCase)
 			prescriptionBytes, _ := json.Marshal(prescription)
-			if err := stub.PutState(userCase.GetKey(), userCaseBytes); err != nil {
+			if err := stub.PutState(userCaseKey, userCaseBytes); err != nil {
 				return shim.Error(fmt.Sprintf("保存病例失败: %v", err))
 			}
-			if err := stub.PutState(prescription.GetKey(), prescriptionBytes); err != nil {
-				if err := stub.DelState(userCase.GetKey()); err != nil {
-					fmt.Sprintf("保存处方失败时，删除病例(%s)失败", userCase.GetKey())
+			if err := stub.PutState(prescriptionKey, prescriptionBytes); err != nil {
+				if err := stub.DelState(userCaseKey); err != nil {
+					fmt.Sprintf("保存处方失败时，删除病例(%s)失败", userCaseKey)
 				}
 				return shim.Error(fmt.Sprintf("保存处方失败: %v", err))
 			}
-			// 更改挂号记录状态，已开处方待支付
-			registerHistory.State = "PendingPayment"
+			// 生成订单
+			// TODO 生成订单明细，明细里应该包括售出药品的全量维度信息
+			//    计算总消费额
+			var (
+				spending         float64
+				medicalItem      MedicalItem
+				medicalItemBytes []byte
+			)
+			for _, item := range items {
+				if medicalItemBytes, err = stub.GetState(item.MedicalItemKey); err != nil {
+					return shim.Error(fmt.Sprintf("获取药品失败 %s (%v)", item.MedicalItemKey, err))
+				}
+				if err := json.Unmarshal(medicalItemBytes, &medicalItem); err != nil {
+					return shim.Error(fmt.Sprintf("药品序列化失败(%v)", err))
+				}
+				p, err := strconv.ParseFloat(medicalItem.Price, 64)
+				if err != nil {
+					return shim.Error(fmt.Sprintf("价格解析失败"))
+				}
+				spending += p
+			}
+			order := &Order{
+				"Order",
+				prescriptionKey,
+				uuid.NewV4().String(),
+				"NotPaid",
+				fmt.Sprintf("%d", time.Now().Unix()),
+				itemsStr,
+				fmt.Sprintf("%.2f", spending),
+			}
+			orderBytes, _ := json.Marshal(order)
+			orderKey := order.GetKey()
+			if err := stub.PutState(orderKey, orderBytes); err != nil {
+				return shim.Error(fmt.Sprintf("保存订单失败(%v)", err))
+			}
+
+			// 更改挂号记录, 添加处方外键和订单外键
+			registerHistory.PrescriptionKey = prescriptionKey
+			registerHistory.OrderKey = orderKey
+			break
 		}
+	/**
+	 * @api {get} /updateRegister/payment 支付
+	 * @apiDescription 开处方后，用户支付处方费用，订单状态 NotPaid -> Paid，同时生成支付记录
+	 * @apiName updateRegister/payment
+	 * @apiGroup HealthService
+	 * @apiUse PaymentHistory
+	 */
 	case "Paid":
-		/* ========  已支付待取药 ========= */
-		registerHistory.State = "Paid"
+		/* ========  支付操作 -> 更改订单状态为 Paid，生成支付记录 ========= */
+		// 获取订单
+		orderKey := registerHistory.OrderKey
+		if orderKey == "" {
+			return shim.Error("挂号记录没有绑定对应订单")
+		}
+		var (
+			order      Order
+			orderBytes []byte
+			err        error
+		)
+		if orderBytes, err = stub.GetState(orderKey); err != nil {
+			return shim.Error(fmt.Sprintf("没有找到对应订单 %s (%v)", orderKey, err))
+		}
+		if err := json.Unmarshal(orderBytes, &order); err != nil {
+			return shim.Error(fmt.Sprintf("订单序列化失败(%v)", err))
+		}
+		order.State = "Paid" // 更改订单状态为已支付
+		orderBytesN, _ := json.Marshal(&order)
+		if err := stub.PutState(orderKey, orderBytesN); err != nil {
+			return shim.Error(fmt.Sprintf("保存订单失败(%v)", err))
+		}
 		// 生成支付记录
+		paymentHistory := &PaymentHistory{
+			"PaymentHistory",
+			uuid.NewV4().String(),
+			order.Spending,
+			orderKey,
+			order.PrescriptionKey,
+			registerHistoryKey,
+			fmt.Sprintf("%d", time.Now().Unix()),
+		}
+		paymentHistoryKey := paymentHistory.GetKey()
+		paymentHistoryBytes, _ := json.Marshal(paymentHistory)
+		if err := stub.PutState(paymentHistoryKey, paymentHistoryBytes); err != nil {
+			return shim.Error(fmt.Sprintf("保存支付记录失败(%v)", err))
+		}
+
+		break
+	/**
+	 * @api {get} /updateRegister/finished 取药
+	 * @apiDescription 用户取药，完成订单。订单状态 Paid -> Finished，同时生成出库记录
+	 * @apiName updateRegister/finished
+	 * @apiGroup HealthService
+	 * @apiUse OutboundHistory
+	 */
 	case "Finished":
-		/* ========  已取药 ========= */
-		registerHistory.State = "Finished"
+		/* ========  已取药 -> 修改订单状态为完成，生成出库记录 ========= */
+		orderKey := registerHistory.OrderKey
+		if orderKey == "" {
+			return shim.Error("订单未生成")
+		}
+		var (
+			orderBytes []byte
+			err        error
+			order      Order
+		)
+		if orderBytes, err = stub.GetState(orderKey); err != nil {
+			return shim.Error(fmt.Sprintf("获取订单失败 %s (%v)", orderKey, err))
+		}
+		if err := json.Unmarshal(orderBytes, &order); err != nil {
+			return shim.Error(fmt.Sprintf("订单序列化失败(%v)", err))
+		}
+		order.State = "Finished"
+		orderBytes, err = json.Marshal(&order)
+		if err := stub.PutState(orderKey, orderBytes); err != nil {
+			return shim.Error(fmt.Sprintf("更新订单状态失败(%v)", err))
+		}
+
 		// 生成出库记录
+		outboundHistory := &OutboundHistory{
+			"OutboundHistory",
+			uuid.NewV4().String(),
+			orderKey,
+			order.PrescriptionKey,
+			registerHistoryKey,
+			fmt.Sprintf("%d", time.Now().Unix()),
+			order.Items,
+		}
+		outboundHistoryKey := outboundHistory.GetKey()
+		outboundHistoryBytes, _ := json.Marshal(outboundHistory)
+		if err := stub.PutState(outboundHistoryKey, outboundHistoryBytes); err != nil {
+			return shim.Error(fmt.Sprintf("生成出库记录失败(%v)", err))
+		}
+		break
 	default:
 		return shim.Error(fmt.Sprintf("不可用的挂号记录状态(%s)", state))
 	}
 	if b, err := json.Marshal(&registerHistory); err != nil {
 		return shim.Error(fmt.Sprintf("序列化回写记录失败(%v)", err))
-	} else if err := stub.PutState(registerHistory.GetKey(), b); err != nil {
+	} else if err := stub.PutState(registerHistoryKey, b); err != nil {
 		return shim.Error(fmt.Sprintf("回写挂号记录失败(%v)", err))
 	}
 

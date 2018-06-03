@@ -27,7 +27,7 @@ func (a *Api) Run() error {
 		AllowAllOrigins:  true,
 		MaxAge:           12 * time.Hour,
 	}))
-	r.GET("/arrangement", a.arrangement)
+	r.POST("/arrangement", a.arrangement)
 	r.GET("/initData", a.initData)
 	r.GET("/query", a.query)
 	r.GET("/createRegister", a.createRegister)

@@ -53,14 +53,17 @@ func (setup *FabricSetup) CreateRegister(userKey, arrangementKey string) (string
 }
 
 type UpdateRegisterForm struct {
-	UserKey            string     `json:"userKey"`
-	RegisterHistoryKey string     `json:"registerHistoryKey"`
-	State              string     `json:"state"`
-	Complained         string     `json:"complained"`
-	Diagnose           string     `json:"diagnose"`
-	History            string     `json:"history"`
-	FamilyHistory      string     `json:"familyHistory"`
-	Items              [][]string `json:"items"`
+	UserKey            string `json:"userKey"`
+	RegisterHistoryKey string `json:"registerHistoryKey"`
+	State              string `json:"state"`
+	Complained         string `json:"complained"`
+	Diagnose           string `json:"diagnose"`
+	History            string `json:"history"`
+	FamilyHistory      string `json:"familyHistory"`
+	Items              []struct {
+		MedicalItemKey string `json:"medicalItemKey"`
+		Count          string `json:"count"`
+	} `json:"items"`
 }
 
 func (setup *FabricSetup) UpdateRegister(f *UpdateRegisterForm) (string, error) {
