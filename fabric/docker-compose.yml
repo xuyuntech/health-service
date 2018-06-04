@@ -104,8 +104,8 @@ services:
     # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
     # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
     environment:
-      - COUCHDB_USER=
-      - COUCHDB_PASSWORD=
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=admin
     ports:
       - 5984:5984
     networks:
@@ -140,8 +140,8 @@ services:
 
       - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
       - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=peer0.couchdb:5984
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
-      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=admin
     working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
     command: peer node start #--peer-chaincodedev=true -o orderer.hf.chainhero.io:7050
     volumes:
@@ -166,8 +166,8 @@ services:
   #   # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
   #   # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
   #   environment:
-  #     - COUCHDB_USER=
-  #     - COUCHDB_PASSWORD=
+  #     - COUCHDB_USER=admin
+  #     - COUCHDB_PASSWORD=admin
   #   ports:
   #     - 6984:5984
   #   networks:
@@ -199,8 +199,8 @@ services:
   #     - CORE_PEER_TLS_SERVERHOSTOVERRIDE=peer1.org1.hf.chainhero.io
   #     - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
   #     - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=peer1.couchdb:5984
-  #     - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=
-  #     - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=
+  #     - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+  #     - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=admin
   #   working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
   #   command: peer node start --peer-chaincodedev=true
   #   volumes:
