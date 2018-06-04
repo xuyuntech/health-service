@@ -100,7 +100,8 @@ services:
 #      - peer0.org1.hf.chainhero.io
   peer0.couchdb:
     container_name: peer0.couchdb
-    image: hyperledger/fabric-couchdb
+#    image: hyperledger/fabric-couchdb
+    image: klaemo/couchdb
     # Populate the COUCHDB_USER and COUCHDB_PASSWORD to set an admin user and password
     # for CouchDB.  This will prevent CouchDB from operating in an "Admin Party" mode.
     environment:
