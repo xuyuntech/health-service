@@ -427,6 +427,14 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 	return shim.Success(nil)
 }
 
+/**
+ * @api {get} /query 查询实体列表
+ * @apiName query
+ * @apiGroup HealthService
+ * @apiParam {String} query_string {"selector":{"docType":{"$eq":"实体名称"}}}
+ * @apiExample {curl} Hospital
+ *    http://localhost:8080/query?query_string={"selector":{"docType":{"$eq":"Hospital"}}}
+ */
 func (s *SmartContract) query(stub shim.ChaincodeStubInterface, args []string) sc.Response {
 
 	//   0
