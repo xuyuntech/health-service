@@ -50,11 +50,14 @@
     参数 visitUnix 就诊时间，1527897600 10 位数字精度到秒，获取方式 time.Now().Unix(), 一般按 上午 10 点，下午 2 点整的时间算，标记上午还是下午
 
     示例:
-        {
-            "hospitalKey":"Hospital-乐亭店",
-        	"doctorKey":"Doctor-39804958768948768",
-        	"visitUnix":1527897600
-        }
+```
+    {
+    	"userKey": "User-14021119870124337X",
+    	"registerHistoryKey": "RegisterHistory-59df2650-4948-41d4-be88-a09c198dd722",
+    	"state": "Visiting"
+    }
+```
+
 3. 挂号 get `/createRegister`
 
     参数 arrangementKey (需要访问 `/query` 获取排班记录数据，拿到 arrangementKey)
