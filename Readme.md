@@ -16,7 +16,7 @@
 
 # 接口访问流程如下：
 
-0. query get `/query`
+## 0. query get `/query`
 
     参数 query_string 是一个 json 对象的序列化字符串
 
@@ -37,11 +37,11 @@
     * 出库记录   OutboundHistory
 
 
-1. 生成数据 get `/initData`
+## 1. 生成数据 get `/initData`
 
     生成各种实体测试数据, 所有的实体数据可以通过 `/query` 接口查询
 
-2. 生成排班记录 post `/arrangement`
+## 2. 生成排班记录 post `/arrangement`
 
     参数 hospitalKey (需要访问 `/query` 获取医院数据[Hospital]，拿到 hospitalKey)
 
@@ -58,7 +58,7 @@
     }
 ```
 
-3. 挂号 get `/createRegister`
+## 3. 挂号 get `/createRegister`
 
     参数 arrangementKey (需要访问 `/query` 获取排班记录数据，拿到 arrangementKey)
 
@@ -67,7 +67,7 @@
     通过 query 可以查看生成的挂号单 RegisterHistory
 
 
-4. 就诊 post `/updateRegister`
+## 4. 就诊 post `/updateRegister`
 
     参数 userKey 步骤 3 得到的 userKey
 
@@ -83,7 +83,7 @@
     }
 ```
 
-5. 开处方 post `/updateRegister`
+## 5. 开处方 post `/updateRegister`
 
     参数 userKey 步骤 3 得到的 userKey
 
@@ -120,7 +120,7 @@
 
     通过 query 可以查看生成的处方 Prescription
 
-6. 支付 post `/updateRegister`
+## 6. 支付 post `/updateRegister`
 
     参数 userKey 步骤 3 得到的 userKey
 
@@ -138,7 +138,7 @@
     ```
     通过 query 可以查看生成的支付记录 PaymentHistory
 
-7. 取药 post `/updateRegister`
+## 7. 取药 post `/updateRegister`
 
     参数 userKey 步骤 3 得到的 userKey
 
