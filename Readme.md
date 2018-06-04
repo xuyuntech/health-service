@@ -75,13 +75,13 @@
 
     参数 state 必须为 Visiting
 
-    示例：
-        {
-        	"userKey": "User-14021119870124337X",
-        	"registerHistoryKey": "RegisterHistory-59df2650-4948-41d4-be88-a09c198dd722",
-        	"state": "Visiting"
-        }
-
+```
+    {
+        "userKey": "User-14021119870124337X",
+        "registerHistoryKey": "RegisterHistory-59df2650-4948-41d4-be88-a09c198dd722",
+        "state": "Visiting"
+    }
+```
 
 5. 开处方 post `/updateRegister`
 
@@ -93,26 +93,27 @@
 
     其他参数如下示例，8 个参数一个不能少
 
-    示例:
-        {
-        	"userKey": "User-14021119870124337X",
-        	"registerHistoryKey": "RegisterHistory-59df2650-4948-41d4-be88-a09c198dd722",
-        	"state": "PendingPayment",
-        	"complained":"发热、恶寒、咳嗽2天，右胸掣痛半天。",
-        	"diagnose":"因外出衣着不慎而始感头痛，连及巅顶，鼻塞声重，时流清涕，微有咳嗽，恶寒发热，无汗。自以为是“感冒”而服“去痛片”未效，但仍坚持工作。次日病情加重，头痛连及项背，周身酸楚无力，下午3时，突然发热、寒战，咳嗽顿作，痰粘而黄，涕浊，不欲饮食，便秘溲黄，遂到×院急诊。",
-        	"history":"平素身体尚可，未患过肺结核及肺炎，未患过肝炎，去年查肝功无异常；1987年患过“急性胃肠炎”，经治而愈；无心脏、肾脏、血液、内分泌及神经系统疾病，亦无外伤史。",
-        	"familyHistory":"母亲年过七旬，尚健。父因“脑出血”于1980年去世。",
-        	"items":[
-        		{
-        			"medicalItemKey": "MedicalItem-国药准字Z10983104-16110111-6933968000031",
-        			"count": "2"
-        		},
-        		{
-        			"medicalItemKey": "MedicalItem-国药准字Z20054729-170601-6934883300435",
-        			"count": "1"
-        		}
-        		]
-        }
+```
+    {
+        "userKey": "User-14021119870124337X",
+        "registerHistoryKey": "RegisterHistory-59df2650-4948-41d4-be88-a09c198dd722",
+        "state": "PendingPayment",
+        "complained":"发热、恶寒、咳嗽2天，右胸掣痛半天。",
+        "diagnose":"因外出衣着不慎而始感头痛，连及巅顶，鼻塞声重，时流清涕，微有咳嗽，恶寒发热，无汗。自以为是“感冒”而服“去痛片”未效，但仍坚持工作。次日病情加重，头痛连及项背，周身酸楚无力，下午3时，突然发热、寒战，咳嗽顿作，痰粘而黄，涕浊，不欲饮食，便秘溲黄，遂到×院急诊。",
+        "history":"平素身体尚可，未患过肺结核及肺炎，未患过肝炎，去年查肝功无异常；1987年患过“急性胃肠炎”，经治而愈；无心脏、肾脏、血液、内分泌及神经系统疾病，亦无外伤史。",
+        "familyHistory":"母亲年过七旬，尚健。父因“脑出血”于1980年去世。",
+        "items":[
+            {
+                "medicalItemKey": "MedicalItem-国药准字Z10983104-16110111-6933968000031",
+                "count": "2"
+            },
+            {
+                "medicalItemKey": "MedicalItem-国药准字Z20054729-170601-6934883300435",
+                "count": "1"
+            }
+            ]
+    }
+```
     通过 query 可以查看生成的订单 Order
 
     通过 query 可以查看生成的病例 Case
@@ -128,11 +129,13 @@
     参数 state 必须为 Paid
 
     示例：
+    ```
         {
         	"userKey": "User-14021119870124337X",
         	"registerHistoryKey": "RegisterHistory-59df2650-4948-41d4-be88-a09c198dd722",
         	"state": "Paid"
         }
+    ```
     通过 query 可以查看生成的支付记录 PaymentHistory
 
 7. 取药 post `/updateRegister`
@@ -144,9 +147,11 @@
     参数 state 必须为 Finished
 
     示例:
+    ```
         {
         	"userKey": "User-14021119870124337X",
         	"registerHistoryKey": "RegisterHistory-59df2650-4948-41d4-be88-a09c198dd722",
         	"state": "Finished"
         }
+    ```
     通过 query 可以查看生成的出库记录 OutboundHistory
