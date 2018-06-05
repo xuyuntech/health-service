@@ -65,3 +65,19 @@ func (setup *FabricSetup) Query(queryString string) (string, error) {
 
 	return string(response.Payload), nil
 }
+
+// QueryUser query the chaincode to get the state of hello
+func (setup *FabricSetup) Find(key string) (string, error) {
+
+	// Prepare arguments
+	var args []string
+	args = append(args, "find")
+	args = append(args, key)
+
+	response, err := setup.client.Query(chclient.Request{ChaincodeID: setup.ChainCodeID, Fcn: args[0], Args: [][]byte{[]byte(args[1])}})
+	if err != nil {
+		return "", fmt.Errorf("failed to find: %v", err)
+	}
+
+	return string(response.Payload), nil
+}

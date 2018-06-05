@@ -27,6 +27,7 @@ func (a *Api) Run() error {
 		AllowAllOrigins:  true,
 		MaxAge:           12 * time.Hour,
 	}))
+	r.GET("/find", a.find)
 	r.POST("/arrangement", a.arrangement)
 	r.GET("/initData", a.initData)
 	r.GET("/query", a.query)
@@ -34,7 +35,19 @@ func (a *Api) Run() error {
 	r.POST("/updateRegister", a.updateRegister)
 	return r.Run()
 }
-
+func (a *Api) find(c *gin.Context) {
+	key := c.Query("key")
+	if key == "" {
+		RespErr(c, fmt.Errorf("need param key"))
+		return
+	}
+	payload, err := a.Fabric.Find(key)
+	if err != nil {
+		RespErr(c, err)
+		return
+	}
+	Resp(c, payload)
+}
 func (a *Api) arrangement(c *gin.Context) {
 	form := &blockchain.ArrangementForm{}
 	if err := c.BindJSON(form); err != nil {
