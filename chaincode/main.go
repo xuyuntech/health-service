@@ -57,11 +57,22 @@ func (s *SmartContract) arrangement(stub shim.ChaincodeStubInterface, args []str
 	doctorKey := args[1]
 	visitUnix := args[2]
 	objectType := "ArrangementHistory"
+	visitUnixInt, err := strconv.ParseInt(visitUnix, 10, 64)
+	if err != nil {
+		return shim.Error(fmt.Sprintf("visitUnix 转化错误:(%v)", err))
+	}
+	vt := time.Unix(visitUnixInt, 0)
+	ampm := "am"
+	if vt.Hour() >= 12 {
+		ampm = "pm"
+	}
 	entity := &ArrangementHistory{
 		objectType,
 		hospitalKey,
 		doctorKey,
 		visitUnix,
+		vt.Format("2006-01-02"),
+		ampm,
 	}
 	if err := putState(entity, stub, "arrangement"); err != nil {
 		return shim.Error(err.Error())
@@ -81,6 +92,13 @@ func (s *SmartContract) arrangement(stub shim.ChaincodeStubInterface, args []str
  * @apiUse Supplier
  */
 func (s *SmartContract) initData(stub shim.ChaincodeStubInterface, args []string) sc.Response {
+
+	if initDataBytes, err := stub.GetState("initData"); err != nil {
+		return shim.Error(fmt.Sprintf("get initData err:(%v)", err))
+	} else if fmt.Sprintf("%s", initDataBytes) == "true" {
+		return shim.Error("重复初始化")
+	}
+
 	doctorType := "Doctor"
 	userType := "User"
 	medicalItemType := "MedicalItem"
@@ -122,6 +140,10 @@ func (s *SmartContract) initData(stub shim.ChaincodeStubInterface, args []string
 			return shim.Error(err.Error())
 		}
 		fmt.Println("Added", vv)
+	}
+
+	if err := stub.PutState("initData", []byte("true")); err != nil {
+		return shim.Error(fmt.Sprintf("save initData err:(%v)", err))
 	}
 
 	// Notify listeners that an event "initHospital" have been executed (check line 19 in the file invoke.go)
@@ -173,10 +195,17 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 		return shim.Error("参数至少需要 3 个")
 	}
 	var (
+		user                 User
+		userBytes            []byte
 		registerHistoryBytes []byte
 		err                  error
 	)
-
+	if userBytes, err = stub.GetState(userKey); err != nil {
+		return shim.Error(fmt.Sprintf("获取用户失败:(%v)", err))
+	}
+	if err := json.Unmarshal(userBytes, &user); err != nil {
+		return shim.Error(fmt.Sprintf("用户序列化失败:(%v)", err))
+	}
 	if registerHistoryBytes, err = stub.GetState(registerHistoryKey); err != nil {
 		return shim.Error(err.Error())
 	} else if registerHistoryBytes == nil {
@@ -219,6 +248,33 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 	case "PendingPayment":
 		{
 			/* ========  已开处方待支付 ========= */
+			// 获取排班
+			var (
+				arrangement      ArrangementHistory
+				arrangementBytes []byte
+				hospital         Hospital
+				hospitalBytes    []byte
+				doctor           Doctor
+				doctorBytes      []byte
+			)
+			if arrangementBytes, err = stub.GetState(registerHistory.ArrangementKey); err != nil {
+				return shim.Error(fmt.Sprintf("获取排班失败:(%v)", err))
+			}
+			if err := json.Unmarshal(arrangementBytes, &arrangement); err != nil {
+				return shim.Error(fmt.Sprintf("排班序列化失败:(%v)", err))
+			}
+			if doctorBytes, err = stub.GetState(arrangement.DoctorKey); err != nil {
+				return shim.Error(fmt.Sprintf("获取医师失败:(%v)", err))
+			}
+			if err := json.Unmarshal(doctorBytes, &doctor); err != nil {
+				return shim.Error(fmt.Sprintf("医师序列化失败:(%v)", err))
+			}
+			if hospitalBytes, err = stub.GetState(arrangement.HospitalKey); err != nil {
+				return shim.Error(fmt.Sprintf("获取医院失败:(%v)", err))
+			}
+			if err := json.Unmarshal(hospitalBytes, &hospital); err != nil {
+				return shim.Error(fmt.Sprintf("医院序列化失败:(%v)", err))
+			}
 			// 验证挂号单状态是否为 Visiting
 			if registerHistory.State != "Visiting" {
 				return shim.Error("挂号单还未核销")
@@ -252,6 +308,13 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 				diagnose,
 				history,
 				familyHistory,
+				userKey,
+				user.Name,
+				arrangement.DoctorKey,
+				doctor.Name,
+				arrangement.HospitalKey,
+				hospital.Name,
+				fmt.Sprintf("%d", time.Now().Unix()),
 			}
 			// 生成处方
 			prescription := &Prescription{
@@ -260,6 +323,11 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 				uuid.NewV4().String(),
 				"",
 				itemsStr,
+				userKey,
+				user.Name,
+				arrangement.DoctorKey,
+				doctor.Name,
+				fmt.Sprintf("%d", time.Now().Unix()),
 			}
 			userCaseKey := userCase.GetKey()
 			prescriptionKey := prescription.GetKey()
@@ -307,6 +375,10 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 				fmt.Sprintf("%d", time.Now().Unix()),
 				itemsStr,
 				fmt.Sprintf("%.2f", spending),
+				registerHistoryKey,
+				userKey,
+				user.Name,
+				userCaseKey,
 			}
 			orderBytes, _ := json.Marshal(order)
 			orderKey := order.GetKey()
@@ -315,6 +387,7 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 			}
 
 			// 更改挂号记录, 添加处方外键和订单外键
+			registerHistory.State = "Finished"
 			registerHistory.PrescriptionKey = prescriptionKey
 			registerHistory.OrderKey = orderKey
 			break
@@ -358,6 +431,8 @@ func (s *SmartContract) updateRegister(stub shim.ChaincodeStubInterface, args []
 			order.PrescriptionKey,
 			registerHistoryKey,
 			fmt.Sprintf("%d", time.Now().Unix()),
+			userKey,
+			user.Name,
 		}
 		paymentHistoryKey := paymentHistory.GetKey()
 		paymentHistoryBytes, _ := json.Marshal(paymentHistory)

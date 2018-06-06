@@ -125,6 +125,8 @@ type ArrangementHistory struct {
 	HospitalKey string `json:"hospitalKey"`
 	DoctorKey   string `json:"doctorKey"`
 	VisitUnix   string `json:"visitUnix"` // 出诊日期时间 unix timestamp
+	VisitDate   string `json:"visitDate"` // 出诊日期 YYYY-MM-DD
+	Ampm        string `json:"ampm"`
 }
 
 func (h ArrangementHistory) GetKey() string {
@@ -254,6 +256,11 @@ type Prescription struct {
 	Sid                string `json:"sid"`     // 处方编号
 	CaseKey            string `json:"caseKey"` // 病例
 	Items              string `json:"items"`   // 处方药品列表 [[ItemKey, Count],[]...]
+	UserKey            string `json:"userKey"`
+	UserName           string `json:"userName"`
+	DoctorKey          string `json:"doctorKey"`
+	DoctorName         string `json:"doctorName"`
+	Created            string `json:"created"`
 }
 
 func (h Prescription) GetKey() string {
@@ -285,6 +292,13 @@ type Case struct {
 	Diagnose        string `json:"diagnose"`        // 临床诊断内容, 现病史
 	History         string `json:"history"`         // 既往史
 	FamilyHistory   string `json:"familyHistory"`   // 家族史
+	UserKey         string `json:"userKey"`
+	UserName        string `json:"userName"`
+	DoctorKey       string `json:"doctorKey"`
+	DoctorName      string `json:"doctorName"`
+	HospitalKey     string `json:"hospitalKey"`
+	HospitalName    string `json:"hospitalName"`
+	Created         string `json:"created"`
 }
 
 func (h Case) GetKey() string {
@@ -309,13 +323,17 @@ type Order struct {
 */
 // Order 订单
 type Order struct {
-	ObjectType      string `json:"docType"`
-	PrescriptionKey string `json:"prescriptionKey"`
-	Number          string `json:"number"`
-	State           string `json:"state"` // NotPaid Paid Finished
-	Created         string `json:"created"`
-	Items           string `json:"items"`
-	Spending        string `json:"spending"`
+	ObjectType         string `json:"docType"`
+	PrescriptionKey    string `json:"prescriptionKey"`
+	Number             string `json:"number"`
+	State              string `json:"state"` // NotPaid Paid Finished
+	Created            string `json:"created"`
+	Items              string `json:"items"`
+	Spending           string `json:"spending"`
+	RegisterHistoryKey string `json:"registerHistoryKey"`
+	UserKey            string `json:"userKey"`
+	UserName           string `json:"userName"`
+	CaseKey            string `json:"caseKey"`
 }
 
 func (h Order) GetKey() string {
@@ -347,6 +365,8 @@ type PaymentHistory struct {
 	PrescriptionKey    string `json:"prescriptionKey"`
 	RegisterHistoryKey string `json:"registerHistoryKey"`
 	Created            string `json:"created"`
+	UserKey            string `json:"userKey"`
+	UserName           string `json:"userName"`
 }
 
 func (h PaymentHistory) GetKey() string {

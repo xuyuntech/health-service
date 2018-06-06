@@ -7,6 +7,8 @@ import (
 
 	"fmt"
 
+	"io/ioutil"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/xuyuntech/health-service/blockchain"
@@ -31,6 +33,7 @@ func (a *Api) Run() error {
 	r.POST("/arrangement", a.arrangement)
 	r.GET("/initData", a.initData)
 	r.GET("/query", a.query)
+	r.POST("/query", a.queryPost)
 	r.GET("/createRegister", a.createRegister)
 	r.POST("/updateRegister", a.updateRegister)
 	return r.Run()
@@ -74,6 +77,24 @@ func (a *Api) query(c *gin.Context) {
 	queryString := c.Query("query_string")
 	if strings.Trim(queryString, " ") == "" {
 		RespErr(c, errors.New("need query_string param"))
+		return
+	}
+	payload, err := a.Fabric.Query(queryString)
+	if err != nil {
+		RespErr(c, err)
+		return
+	}
+	Resp(c, payload)
+}
+func (a *Api) queryPost(c *gin.Context) {
+	b, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		RespErr(c, err)
+		return
+	}
+	queryString := string(b)
+	if strings.Trim(queryString, " ") == "" {
+		RespErr(c, errors.New("need body"))
 		return
 	}
 	payload, err := a.Fabric.Query(queryString)
