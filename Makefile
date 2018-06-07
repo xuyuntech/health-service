@@ -36,3 +36,10 @@ clean: env-down
 	@docker rm -f -v `docker ps -a --no-trunc | grep "heroes-service" | cut -d ' ' -f 1` 2>/dev/null || true
 	@docker rmi `docker images --no-trunc | grep "heroes-service" | cut -d ' ' -f 1` 2>/dev/null || true
 	@echo "Clean up done"
+
+fe-app:
+	docker run -it -p 3001:3000 registry.cn-beijing.aliyuncs.com/cabernety/health-service-fe-app:latest
+
+fe:
+	docker run -it -p 3000:3000 registry.cn-beijing.aliyuncs.com/cabernety/health-service-fe:latest
+
